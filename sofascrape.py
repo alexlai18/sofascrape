@@ -7,7 +7,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 # If deployed will set this as environment variable
-from password import password, email, api_url, headers
+from password import password, email, api_url, headers, website_url
 
 def create_email(email, email_string):
     # Sending an email
@@ -15,6 +15,13 @@ def create_email(email, email_string):
     with open('email_template.txt', 'r') as file:
         TEXT = file.read().replace('\n', '')
 
+    # Getting title
+    response = requests.get(website_url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+    target_element = soup.find('h2', class_='sc-jEACwC KoTOQ')
+
+    TEXT = TEXT.replace("TITLE", target_element.text)
+    TEXT = TEXT.replace("LINK", website_url)
     TEXT = TEXT.replace("TENTATIVE MESSAGE", email_string)
 
     email_sender = 'laiierbettingscan@gmail.com'
@@ -39,19 +46,21 @@ def create_email(email, email_string):
 # Getting all possible responses from sofascore (usually only goes until 5)
 responses = []
 for i in range(20):
+    reqRes = requests.get(f'{api_url}/{i}', headers=headers).json()
     # Headers is just your headers from www.whatismybrowser.com
-    responses.append(requests.get(f'{api_url}/{i}', headers=headers))
+    responses.append(reqRes)
+    if reqRes['hasNextPage'] == False:
+        break
 names = []
 
 
 for response in responses:
     # Convert matches into json form
-    matches = response.json()
-    if (matches.get('error')):
+    if (response.get('error')):
         break
 
     # Extract names from matches and convert UNIX timestamp to localtime
-    for match in matches['events']:
+    for match in response['events']:
         local_datetime = datetime.datetime.fromtimestamp(match['startTimestamp'])
         local_time_str = datetime.datetime.strftime(local_datetime, "%a, %d %b %Y %H:%M:%S")
         names.append({local_time_str: (match['homeTeam']['slug'], match['awayTeam']['slug'])})
