@@ -48,6 +48,8 @@ def get_info(api_url, website_url):
     responses = []
     for i in range(20):
         reqRes = requests.get(f'{api_url}/{i}', headers=headers).json()
+        if reqRes.get('error'):
+            break
         # Headers is just your headers from www.whatismybrowser.com
         responses.append(reqRes)
         if reqRes['hasNextPage'] == False:
