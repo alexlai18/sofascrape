@@ -7,7 +7,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 # If deployed will set this as environment variable
-from password import password, email, api_list, headers, website_list
+from password import password, email_list, api_list, headers, website_list
 
 def create_email(email, email_string, website_url):
     # Sending an email
@@ -97,7 +97,9 @@ def get_info(api_url, website_url):
         email_string += '<br />'
     if email_string == '':
         email_string = 'Unfortunately, there are no consecutive games for this tournament'
-    create_email(email, email_string, website_url)
+    
+    for email in email_list:
+        create_email(email, email_string, website_url)
 
 # Main function to run script
 for i in range(len(api_list)):
