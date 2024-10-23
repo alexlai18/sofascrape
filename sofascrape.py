@@ -7,47 +7,13 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 # If deployed will set this as environment variable
-from password import password, email_list, api_list, headers, website_list
 
-def create_email(email, email_string, website_url):
-    # Sending an email
-    # Template from https://codepen.io/rKalways/pen/VwwQKpV
-    with open('email_template.txt', 'r') as file:
-        TEXT = file.read().replace('\n', '')
-
-    # Getting title
-    response = requests.get(website_url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    target_element = soup.find('h2', class_='sc-jEACwC KoTOQ')
-
-    TEXT = TEXT.replace("TITLE", target_element.text)
-    TEXT = TEXT.replace("LINK", website_url)
-    TEXT = TEXT.replace("TENTATIVE MESSAGE", email_string)
-
-    email_sender = 'laiierbettingscan@gmail.com'
-
-    em = EmailMessage()
-    em['From'] = email_sender
-    em['To'] = email
-    em['Subject'] = "Today's Table Tennis Matches"
-    em.set_content(TEXT)
-
-    # Make the message multipart
-    em.add_alternative(TEXT, subtype='html')
-
-    # Add SSL (layer of security)
-    context = ssl.create_default_context()
-
-    # Log in and send the email
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
-        smtp.login(email_sender, password)
-        smtp.sendmail(email_sender, email, em.as_string())
-
-def get_info(api_url, website_url):
+api_list = ["https://www.sofascore.com/api/v1/unique-tournament/19041/events/last", "https://www.sofascore.com/api/v1/unique-tournament/15005/events/next"]
+def get_info(api_url):
     # Getting all possible responses from sofascore (usually only goes until 5)
     responses = []
     for i in range(20):
-        reqRes = requests.get(f'{api_url}/{i}', headers=headers).json()
+        reqRes = requests.get(f'{api_url}/{i}').json()
         if reqRes.get('error'):
             break
         # Headers is just your headers from www.whatismybrowser.com
@@ -86,21 +52,6 @@ def get_info(api_url, website_url):
             elif len(common_players) == 2:
                 res.append(((timestamp1, players1), (timestamp2, players2)))
                 break
-
-    # Configuring email string
-    email_string = ''
-    for fin in res:
-        email_string += f'First game at: {fin[0][0]} between {fin[0][1][0]} and {fin[0][1][1]}'
-        email_string += '<br />'
-        email_string += f'Second game is at {fin[1][0]}'
-        email_string += '<br />'
-        email_string += '<br />'
-    if email_string == '':
-        email_string = 'Unfortunately, there are no consecutive games for this tournament'
-    
-    for email in email_list:
-        create_email(email, email_string, website_url)
-
 # Main function to run script
 for i in range(len(api_list)):
-    get_info(api_list[i], website_list[i])
+    get_info(api_list[i])
