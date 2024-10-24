@@ -8,7 +8,7 @@ import ssl
 from email.message import EmailMessage
 # If deployed will set this as environment variable
 
-api_list = ["https://www.sofascore.com/api/v1/unique-tournament/19041/events/last", "https://www.sofascore.com/api/v1/unique-tournament/15005/events/next"]
+api_list = ["https://www.sofascore.com/api/v1/unique-tournament/19041/events/next", "https://www.sofascore.com/api/v1/unique-tournament/15005/events/next"]
 def get_info(api_url):
     # Getting all possible responses from sofascore (usually only goes until 5)
     responses = []
@@ -52,6 +52,8 @@ def get_info(api_url):
             elif len(common_players) == 2:
                 res.append(((timestamp1, players1), (timestamp2, players2)))
                 break
+
+    print(res)
 # Main function to run script
 for i in range(len(api_list)):
     get_info(api_list[i])
